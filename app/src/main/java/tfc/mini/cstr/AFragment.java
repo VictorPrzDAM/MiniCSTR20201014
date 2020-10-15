@@ -5,14 +5,17 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
@@ -36,8 +39,9 @@ public class AFragment extends Fragment {
     public AFragment() {
         // Required empty public constructor
     }
+    //
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
-    private CollectionReference notebookRef = db.collection("Notebook");
+    private CollectionReference notebookRef = db.collection("Seguimientos");
     private SeguimientoAdapter adapter;
     private void setUpRecyclerView(View v) {
         // Query query = notebookRef.orderBy("priority", Query.Direction.DESCENDING);
@@ -77,12 +81,25 @@ public class AFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+
     }
 
+FloatingActionButton fab;
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         setUpRecyclerView(view);
+        fab = view.findViewById(R.id.floatingActionButton);
+        fab. setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(getContext(), "Agregar dato: ", Toast.LENGTH_SHORT).show();
+
+                NavHostFragment.findNavController(AFragment.this)
+                        .navigate(R.id.action_AFragment_to_BFragment);
+
+            }
+        });
     }
 
     @Override
@@ -97,8 +114,8 @@ public class AFragment extends Fragment {
         adapter.startListening();
     }
     @Override
-    public void onStop() {
-        super.onStop();
-        adapter.stopListening();
-    }
+public void onStop() {
+    super.onStop();
+    adapter.stopListening();
+}
 }

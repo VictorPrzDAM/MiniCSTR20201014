@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -7,16 +8,25 @@
     tools:context=".AFragment">
 
     <!-- TODO: Update blank fragment layout -->
-    <TextView
-        android:layout_width="match_parent"
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        app:layout_anchor="@id/recycler_view"
+        app:layout_anchorGravity="bottom|end"
+        android:layout_marginRight="24dp"
+        android:layout_marginBottom="32dp"
+        android:layout_gravity="bottom|right"
+        android:id="@+id/floatingActionButton"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/hello_blank_fragment" />
+        android:clickable="true"
+        android:backgroundTint="#00695C"
+        android:src="@android:drawable/ic_input_add" />
 
     <androidx.recyclerview.widget.RecyclerView
+        android:layout_marginTop="24dp"
         android:id="@+id/recycler_view"
-        tools:context="tfc.mini.cstr.SeguimientoAdapter"
-        tools:listitem="@layout/item_lista_fragment_a"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        tools:listitem="@layout/item_lista_fragment_a" />
 
-</LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

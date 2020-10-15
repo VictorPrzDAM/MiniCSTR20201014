@@ -2,11 +2,22 @@ package tfc.mini.cstr;
 
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.fragment.NavHostFragment;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.Toast;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -55,6 +66,42 @@ public class BFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        setUpUIelemts(view);
+    }
+
+    private TextInputEditText textInputEditText;
+    private FloatingActionButton fab;
+    private Button button;
+
+    private void setUpUIelemts(View view) {
+        textInputEditText = view.findViewById(R.id.textInputEditText_dato);
+        fab = view.findViewById(R.id.fab_tomar_foto);
+        button = view.findViewById(R.id.button_guardar_en_firebase);
+        //
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Guardar datos en firebase...
+                 saveNote();
+                NavController navcon = NavHostFragment.findNavController(BFragment.this);
+                navcon.popBackStack();
+            }
+        });
+    }
+    private void saveNote() {
+        String dato = textInputEditText.getText().toString();
+        if (dato.trim().isEmpty()  ) {
+            Toast.makeText(getContext(), "Por favor inserte dato.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        CollectionReference notebookRef = FirebaseFirestore.getInstance()
+                .collection("Seguimientos");
+        notebookRef.add(new Seguimiento(dato ));
+        Toast.makeText(getContext(), "Dato Guardado", Toast.LENGTH_SHORT).show();
+    }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {

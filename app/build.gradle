@@ -25,7 +25,8 @@ android {
 
 dependencies {
     implementation 'com.firebaseui:firebase-ui-firestore:6.3.0'
-
+    // FirebaseUI Storage only está integrado con glide.
+    implementation 'com.firebaseui:firebase-ui-storage:6.2.0'
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.2'

@@ -9,22 +9,32 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link AFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
+
+
+
 public class AFragment extends Fragment {
 
     // TODO: Rename parameter arguments, choose names that match
@@ -39,21 +49,25 @@ public class AFragment extends Fragment {
     public AFragment() {
         // Required empty public constructor
     }
+
     //
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
     private CollectionReference notebookRef = db.collection("Seguimientos");
     private SeguimientoAdapter adapter;
+//
+
     private void setUpRecyclerView(View v) {
         // Query query = notebookRef.orderBy("priority", Query.Direction.DESCENDING);
-         Query query = notebookRef.orderBy("dato", Query.Direction.DESCENDING);
+        Query query = notebookRef.orderBy("dato", Query.Direction.DESCENDING);
         FirestoreRecyclerOptions<Seguimiento> options = new FirestoreRecyclerOptions.Builder<Seguimiento>()
-             .setQuery(query, Seguimiento.class)
+                .setQuery(query, Seguimiento.class)
                 .build();
-        adapter = new SeguimientoAdapter(options);
+        adapter = new SeguimientoAdapter(options, getContext());
         RecyclerView recyclerView = v.findViewById(R.id.recycler_view);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(adapter);
+        //
     }
 
     /**
@@ -84,13 +98,14 @@ public class AFragment extends Fragment {
 
     }
 
-FloatingActionButton fab;
+    private FloatingActionButton fab;
+
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         setUpRecyclerView(view);
         fab = view.findViewById(R.id.floatingActionButton);
-        fab. setOnClickListener(new View.OnClickListener() {
+        fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Toast.makeText(getContext(), "Agregar dato: ", Toast.LENGTH_SHORT).show();
@@ -108,14 +123,16 @@ FloatingActionButton fab;
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_a, container, false);
     }
+
     @Override
     public void onStart() {
         super.onStart();
         adapter.startListening();
     }
+
     @Override
-public void onStop() {
-    super.onStop();
-    adapter.stopListening();
-}
+    public void onStop() {
+        super.onStop();
+        adapter.stopListening();
+    }
 }

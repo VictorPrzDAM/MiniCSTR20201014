@@ -19,9 +19,7 @@ import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 
 public class SeguimientoAdapter extends FirestoreRecyclerAdapter<Seguimiento, SeguimientoAdapter.SeguimientoHolder> {
     private final Context context;
@@ -42,13 +40,13 @@ public class SeguimientoAdapter extends FirestoreRecyclerAdapter<Seguimiento, Se
     protected void onBindViewHolder(@NonNull final SeguimientoHolder holder, int position, @NonNull Seguimiento model) {
         //Dar valores a cada elemento de UI:  e.g holder.textViewTitle.setText(model.getTitle());
         holder.textView_dato_lista.setText(model.getDato());
-        holder.textView_id_lista.setText(model.getIdImagen());
+        holder.textView_id_lista.setText(model.getIdImagen()) ;
         //
         String imgPath = "uploads/" + model.getIdImagen();//IMAGE_PATH;
         downLoadImage(imgPath, holder.imageView_thumbnail);
     }
 
-    private StorageReference storageReference;
+     private StorageReference storageReference;
      public void downLoadImage(String imgPath, final ImageView imageView) {
         storageReference = FirebaseStorage.getInstance().getReference();
         // imgPath "users/me/profile.png"

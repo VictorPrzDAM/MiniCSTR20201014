@@ -33,8 +33,6 @@ import com.google.firebase.storage.UploadTask;
  * create an instance of this fragment.
  */
 
-
-
 public class AFragment extends Fragment {
 
     // TODO: Rename parameter arguments, choose names that match
@@ -95,7 +93,6 @@ public class AFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
-
     }
 
     private FloatingActionButton fab;
@@ -109,10 +106,8 @@ public class AFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 Toast.makeText(getContext(), "Agregar dato: ", Toast.LENGTH_SHORT).show();
-
                 NavHostFragment.findNavController(AFragment.this)
                         .navigate(R.id.action_AFragment_to_BFragment);
-
             }
         });
     }

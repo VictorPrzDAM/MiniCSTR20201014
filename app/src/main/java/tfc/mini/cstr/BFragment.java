@@ -97,7 +97,7 @@ public class BFragment extends Fragment {
     private StorageReference storageReference_uploads;
     private Activity activity;//Para poder mostrar el toast al terminar de subir la imagen, con getContext directamente no funciona
     private FirebaseStorage firebaseStorage;
-
+    //
     public BFragment() {
         // Required empty public constructor
     }
@@ -111,21 +111,10 @@ public class BFragment extends Fragment {
         storageReference_uploads = firebaseStorage.getReference("uploads");
     }
 
-    public void delete(String s) {
-        //StorageReference imageRef = firebaseStorage.getReferenceFromUrl( "gs://minicstr-8478b.appspot.com/uploads/1603294526876.png");
-        StorageReference imageRef = firebaseStorage.getReferenceFromUrl(s);
-        imageRef.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
-            @Override
-            public void onSuccess(Void aVoid) {
-                Toast.makeText(activity, " ", Toast.LENGTH_SHORT).show();
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Toast.makeText(activity, e.getMessage(), Toast.LENGTH_SHORT).show();
-                Log.d(TAG, e.getMessage());
-            }
-        });
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_b, container, false);
     }
 
     @Override
@@ -162,41 +151,13 @@ public class BFragment extends Fragment {
         /*
         fab2.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-            }
+            public void onClick(View view) { }
         });
-*/
-    }
-
-    private void saveSeguimiento() {
-        String dato = textInputEditText.getText().toString();
-        if (dato.trim().isEmpty()) {
-            Toast.makeText(getContext(), "Por favor inserte dato.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        // Obtenemos los bytes de la imagen...
-        byte[] dataImg = getImageBytes(imageView);
-        if (dataImg == null) { // si podemos la subimos...
-            Toast.makeText(getContext(), "Por favor tome fotografía.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        // Subimos la imagen
-        // TODO Esto debería de ser una transacción. el registro y la fotografía juntos. // ver videos coding-in-flow transaction
-        // TODO además debería guardar un thumbnail:
-        Seguimiento s = new Seguimiento(dato);
-        uploadSeguimiento(dataImg, s);
-        Toast.makeText(getContext(), "Dato Guardado", Toast.LENGTH_SHORT).show();
-        //TODO una vez guardado deberían guardarse las imagenes en local
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_b, container, false);
+        */
     }
 
     /**
+     * Método que recibe la imagen capturada por la cámara.
      * @param requestCode código de retorno (no necesario)
      * @param resultCode  resultado de la aplicación
      * @param data        contenido del intent de la cámara
@@ -206,6 +167,7 @@ public class BFragment extends Fragment {
         super.onActivityResult(requestCode, resultCode, data);
         Bitmap imageBitmap;
         if (resultCode == RESULT_OK) {
+            // Extraer la imagen de los extras.
             Bundle extras = data.getExtras();
             imageBitmap = (Bitmap) extras.get("data");
             imageView.setImageBitmap(imageBitmap);
@@ -216,80 +178,58 @@ public class BFragment extends Fragment {
         }
     }
 
-
+    /**
+     * Comprueba que los datos de la GUI sean válidos y llama uploadImagenSeguimiento, tras el cual si
+     * tiene éxito transactionDatosSeguimiento();
+     * 0.- saveSeguimiento()
+     * 1.- uploadImagenSeguimiento(final byte[] dataImg, final Seguimiento seguimiento)
+     * 2.- transactionDatosSeguimiento(final Uri imageUri, final Seguimiento seguimiento)
+     */
+    private void saveSeguimiento() {
+        String dato = textInputEditText.getText().toString();
+        if (dato.trim().isEmpty()) {// si está vacío el campo de texto:
+            Toast.makeText(getContext(), "Por favor inserte dato.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        // Obtenemos los bytes de la imagen...
+        byte[] dataImg = getImageBytes(imageView);
+        if (dataImg == null) { // si podemos la subimos...
+            Toast.makeText(getContext(), "Por favor tome fotografía.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        //Tomamos los datos de la GUI.
+        Seguimiento s = new Seguimiento(dato);
+        uploadImagenSeguimiento(dataImg, s);
+        Toast.makeText(getContext(), "Dato Guardado", Toast.LENGTH_SHORT).show();
+        // TODO una vez guardado deberían guardarse las imágenes en local
+    }
+    /**
+     * Para obtener los bytes del imageView.
+     * @param imageView
+     * @return
+     */
     private byte[] getImageBytes(ImageView imageView) {
         Drawable drawable = imageView.getDrawable();
         if (drawable != null) {
             Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap();
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            // También se podría obtener desde aquí.
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
             return baos.toByteArray();
         }
         return null;
     }
 
-
-    private void fireStoreSeguimientoTransaction(final Uri imageUri, final Seguimiento seguimiento) {// Primero reads luego writes
-        final FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.runTransaction(new Transaction.Function<String>() {
-            @Override
-            public String apply(@NonNull Transaction transaction) throws FirebaseFirestoreException {
-                //LECTURAS
-                //No ha de momento...
-                //ESCRITURAS
-                CollectionReference colRef_Seguimientos = db.collection("Seguimientos");
-                DocumentReference docReference = colRef_Seguimientos.document();
-                //
-                seguimiento.setImageURL(imageUri.toString());
-                //
-                transaction.set(docReference, seguimiento);
-                //
-                return docReference.getId();
-            }
-        }).addOnSuccessListener(new OnSuccessListener<String>() {
-            @Override
-            public void onSuccess(String result) {
-                Toast.makeText(getContext(), "onSuccess: ID:" + result, Toast.LENGTH_SHORT).show();
-                //
-                NavController navcon = NavHostFragment.findNavController(BFragment.this);
-                navcon.popBackStack();
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                //Si algo saliera mal se podría borrar la foto.
-                if (imageUri != null) {
-                    delete(imageUri.toString());
-                    Toast.makeText(activity, "ImageUri" + imageUri.getPath() + "deleted.", Toast.LENGTH_LONG).show();
-                } else {
-                    Toast.makeText(getContext(), "imageUri == null", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-    }
-
-    //
-    private void waiter(long millis) {
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                //  mProgressBar.setProgress(0);
-            }
-        }, millis);
-    }
-
     /**
-     *
-     * @return
+     * Sube la imagen del seguimiento al storage, si la subida tiene éxito comenzamos a subir los datos
+     * alfanuméricos.El método generará un id para la imagen.Parte del progress bar se ha de completar en este método.
+     * // TODO aquí seria interesante que la imagen se guardase en disco para ser aprovechada con posterioridad.
+     * @param dataImg bytes de la imagen
+     * @param seguimiento
      */
-    private String generateID() {
-        return System.currentTimeMillis() + ".png";
-    }
-
-    private void uploadSeguimiento(final byte[] dataImg, final Seguimiento seguimiento) {
-        seguimiento.setIdImagen(generateID());
-        final StorageReference fileReference = storageReference_uploads.child(seguimiento.getIdImagen());
+    private void uploadImagenSeguimiento(final byte[] dataImg, final Seguimiento seguimiento) {
+        seguimiento.setIdImagen(generateID());//Generamos un id para la imagen.
+        final StorageReference fileReference = storageReference_uploads.child(seguimiento.getIdImagen());//Imagen que vamos a subir.
         fileReference.putBytes(dataImg)
                 .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                     @Override
@@ -307,11 +247,17 @@ public class BFragment extends Fragment {
                 })
                 .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
                     @Override
-                    public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {//TODO Agregar una Progressbar
-                        // double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
-                        // mProgressBar.setProgress((int) progress);
+                    public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                        //TODO Agregar una Progressbar
+                        //  double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
+                        //  mProgressBar.setProgress((int) progress);
                     }
-                }).continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+                })
+                 /*
+                   Continuación de la tarea, una vez terminada, recogemos la uri getDownloadUrl()
+                   del nuevo archivo, esto es importante porque se ha de guardar en el POJO.
+                 */
+                .continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
             @Override
             public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
                 if (!task.isSuccessful()) {
@@ -322,8 +268,103 @@ public class BFragment extends Fragment {
         }).addOnSuccessListener(new OnSuccessListener<Uri>() {
             @Override
             public void onSuccess(Uri imageUri) {
-                fireStoreSeguimientoTransaction(imageUri, seguimiento);
+                transactionDatosSeguimiento(imageUri, seguimiento);
             }
         });
     }
+    /**
+     * Este método sube el contenido alfanumérico de un registro a la base de datos de forma atómica.
+     * Si falla alguna de las transacciones la base de datos se revierte al su estado anterior, preservando su integridad.
+     * Si o suben todos los datos o ninguno. además si falla la subida de datos alfanuméricos se borrará imagen asociada mediante un deleteImagenSeguimiento
+     * en caso de éxito el NavController nos llevará al fragment anterior.
+     * //
+     * @param imageUri una uri absoluta como e.g: gs://minicstr-8478b.appspot.com/uploads/1603294526876.png
+     * @param seguimiento POJO que contenrdá todos los datos alfanuméricos del seguimiento , el id y la url de la imagen serán establecidos aquí.
+     */
+    private void transactionDatosSeguimiento(final Uri imageUri, final Seguimiento seguimiento) {// Primero reads luego writes
+        final FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.runTransaction(new Transaction.Function<String>() {
+            @Override
+            public String apply(@NonNull Transaction transaction) throws FirebaseFirestoreException {
+                //*****************************LECTURAS*********************************************
+                // No hay de momento ...
+                //****************************ESCRITURAS********************************************
+                // Creamos una referencia a los seguimientos y en ella la referencia a un nuevo documento
+                CollectionReference colRef_Seguimientos = db.collection("Seguimientos");
+                DocumentReference docReference = colRef_Seguimientos.document();
+                // Guardamos la URI en el POJO.
+                seguimiento.setImageURL(imageUri.toString());
+                // Llamamos a la transacción con la referencia al document (que generará un nuevo ID) y el seguimiento , transmitimos los datos...
+                transaction.set(docReference, seguimiento);
+                // mandamos el id generado.
+                return docReference.getId();
+            }
+        }).addOnSuccessListener(new OnSuccessListener<String>() {
+            @Override
+            public void onSuccess(String result) {
+                Toast.makeText(getContext(), "onSuccess: ID:" + result, Toast.LENGTH_SHORT).show();
+                // Volver al Fragment anterior.
+                NavController navcon = NavHostFragment.findNavController(BFragment.this);
+                navcon.popBackStack();
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                // Si algo saliera mal se podría borrar la foto.
+                if (imageUri != null) {
+                    // Si falla la subida de datos alfanuméricos tendremos que borrar.
+                    deleteImagenSeguimiento(imageUri.toString());
+                    Toast.makeText(activity, "ImageUri " + imageUri.getPath() + "deleted.", Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(getContext(), "ImageUri == null", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+    /**
+     * Permite borrar un archivo (imagen) del storage. Se utiliza para borrar la imagen en caso de no haberse podido
+     * escribir los datos alfanuméricos en el método.
+     * tfc.mini.cstr.BFragment#transactionDatosSeguimiento(android.net.Uri, tfc.mini.cstr.Seguimiento)
+     * @param url una url absoluta como e.g: gs://minicstr-8478b.appspot.com/uploads/1603294526876.png
+     */
+    private void deleteImagenSeguimiento(String url) {
+        // StorageReference imageRef = firebaseStorage.getReferenceFromUrl( "gs://minicstr-8478b.appspot.com/uploads/1603294526876.png");
+        StorageReference imageRef = firebaseStorage.getReferenceFromUrl(url);
+        imageRef.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                Toast.makeText(activity, "Borrado", Toast.LENGTH_SHORT).show();
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(activity, e.getMessage(), Toast.LENGTH_SHORT).show();
+                Log.d(TAG, e.getMessage());
+            }
+        });
+    }
+
+
+    /***
+     * Método auxiliar para simular un retraso en las operaciones largas.
+     * @param millis tiempo de retraso
+     */
+    private void waiter(long millis) {
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                //  mProgressBar.setProgress(0);
+            }
+        }, millis);
+    }
+
+    /**
+     * Genera un id a partir del tiempo en milisegundos.
+     * @return
+     */
+    private String generateID() {
+        return System.currentTimeMillis() + ".png";
+    }
 }
+

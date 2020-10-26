@@ -1,15 +1,11 @@
 package tfc.mini.cstr;
 
 import android.content.Context;
-import android.net.Uri;
-import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -42,15 +38,17 @@ public class SeguimientoAdapter extends FirestoreRecyclerAdapter<Seguimiento, Se
         holder.textView_dato_lista.setText(model.getDato());
         holder.textView_id_lista.setText(model.getIdImagen()) ;
         //
-        String imgPath = "uploads/" + model.getIdImagen();//IMAGE_PATH;
+        // String imgPath = "uploads/" + model.getIdImagen();//alternativa a buscar por fullURL
+        String imgPath = model.getImageURL();//IMAGE_PATH;
         downLoadImage(imgPath, holder.imageView_thumbnail);
     }
 
      private StorageReference storageReference;
      public void downLoadImage(String imgPath, final ImageView imageView) {
-        storageReference = FirebaseStorage.getInstance().getReference();
-        // imgPath "users/me/profile.png"
-        storageReference.child(imgPath).getBytes(Long.MAX_VALUE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+/*    storageReference = FirebaseStorage.getInstance().getReference();//alternativa a buscar por fullURL
+      storageReference.child(imgPath).getBytes(Long.MAX_VALUE).addOnSuccessListener(new OnSuccessListener<byte[]>() {//alternativa a buscar por fullURL*/
+        storageReference = FirebaseStorage.getInstance().getReferenceFromUrl(imgPath);
+        storageReference.getBytes(Long.MAX_VALUE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
             @Override
             public void onSuccess(byte[] bytes) {
                 // Use the bytes to display the image
@@ -66,8 +64,7 @@ public class SeguimientoAdapter extends FirestoreRecyclerAdapter<Seguimiento, Se
             }
         });
     }
-//    Object does not exist at location.
-//    Code: -13010 HttpResult: 404
+
     @NonNull
     @Override
     public SeguimientoHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -76,17 +73,14 @@ public class SeguimientoAdapter extends FirestoreRecyclerAdapter<Seguimiento, Se
         return new SeguimientoHolder(v);
     }
 
-
     public class SeguimientoHolder extends RecyclerView.ViewHolder {
         //Declarar elementos UI: e.g: TextView textView;
-
         TextView textView_dato_lista;
         TextView textView_id_lista;
         ImageView imageView_thumbnail;
 
         public SeguimientoHolder(@NonNull View itemView) {
             super(itemView);
-
             //Instanciar elementos UI: e.g:   textView =  itemView.findViewById(R.id...);
             textView_dato_lista = itemView.findViewById(R.id.textView_dato_lista);
             textView_id_lista = itemView.findViewById(R.id.textView_id_imagen_lista);
